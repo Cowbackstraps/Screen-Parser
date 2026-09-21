@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="鸿蒙模拟器屏幕语义解析工具" />
+    <title>屏幕语义解析</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">HARMONYOS · SCREEN INTELLIGENCE</p>
+          <h1>屏幕语义解析</h1>
+        </div>
+        <div class="controls">
+          <span id="deviceStatus" class="status">检测设备中</span>
+          <button id="analyzeButton" type="button">解析</button>
+        </div>
+      </header>
+
+      <section class="meta-bar" aria-label="解析状态">
+        <div><span>设备</span><strong id="deviceName">—</strong></div>
+        <div><span>模型</span><strong id="modelName">—</strong></div>
+        <div><span>页面</span><strong id="pageType">尚未解析</strong></div>
+        <div class="legend" aria-label="边框图例">
+          <span><i class="dot blue"></i>视觉模型</span>
+          <span><i class="dot gray"></i>待确认</span>
+          <span><i class="dot red"></i>当前选中</span>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div class="viewer-card">
+          <div class="section-heading">
+            <h2>当前屏幕</h2>
+            <span id="screenSize">—</span>
+          </div>
+          <div id="screenStage" class="screen-stage">
+            <div id="emptyState" class="empty-state">
+              <span class="scan-mark" aria-hidden="true"></span>
+              <strong>等待解析</strong>
+              <p>启动鸿蒙模拟器后，点击右上角“解析”。</p>
+            </div>
+            <div id="imageWrap" class="image-wrap" hidden>
+              <img id="screenImage" alt="鸿蒙模拟器当前屏幕" />
+              <div id="overlay" class="overlay"></div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="result-card">
+          <div class="section-heading">
+            <h2>语义节点</h2>
+            <span id="nodeCount">0 个</span>
+          </div>
+          <div id="pageSummary" class="page-summary" hidden>
+            <strong id="pageTitle"></strong>
+            <p id="pageDescription"></p>
+          </div>
+          <div id="message" class="message">解析结果将在这里显示。</div>
+          <ol id="nodeList" class="node-list"></ol>
+          <div id="nodeDetail" class="node-detail" hidden></div>
+        </aside>
+      </section>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
