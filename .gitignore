@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+.paddlex/
 venv/
 .pytest_cache/
 *.egg-info/
@@ -11,6 +12,8 @@ dist/
 !.env.example
 *.log
 screenshots/
+benchmarks/data/
+benchmarks/results/
 *.png
 *.jpeg
 *.jpg

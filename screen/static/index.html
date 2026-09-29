@@ -3,48 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="鸿蒙模拟器屏幕语义解析工具" />
-    <title>屏幕语义解析</title>
+    <meta name="description" content="鸿蒙屏幕语义解析" />
+    <title>鸿析 Screen Parser</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <main class="shell">
       <header class="topbar">
-        <div>
-          <p class="eyebrow">HARMONYOS · SCREEN INTELLIGENCE</p>
-          <h1>屏幕语义解析</h1>
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <p class="eyebrow">HARMONYOS VISUAL INSIGHT</p>
+            <h1>鸿析 Screen Parser</h1>
+          </div>
         </div>
         <div class="controls">
-          <span id="deviceStatus" class="status">检测设备中</span>
-          <button id="analyzeButton" type="button">解析</button>
+          <nav class="view-switch" aria-label="页面视图">
+            <button id="demoViewButton" type="button" aria-pressed="true">实时解析</button>
+            <button id="architectureViewButton" type="button" aria-pressed="false">系统架构</button>
+          </nav>
+          <span id="deviceStatus" class="status">正在连接</span>
+          <button id="analyzeButton" type="button">开始解析</button>
         </div>
       </header>
 
-      <section class="meta-bar" aria-label="解析状态">
-        <div><span>设备</span><strong id="deviceName">—</strong></div>
-        <div><span>模型</span><strong id="modelName">—</strong></div>
-        <div><span>页面</span><strong id="pageType">尚未解析</strong></div>
-        <div class="legend" aria-label="边框图例">
-          <span><i class="dot blue"></i>视觉模型</span>
-          <span><i class="dot gray"></i>待确认</span>
-          <span><i class="dot red"></i>当前选中</span>
-        </div>
-      </section>
-
-      <section class="workspace">
+      <section id="demoView" class="workspace" aria-label="实时解析">
         <div class="viewer-card">
           <div class="section-heading">
-            <h2>当前屏幕</h2>
-            <span id="screenSize">—</span>
+            <div class="heading-title">
+              <span class="section-kicker">01 / SCREEN</span>
+              <h2>画面预览</h2>
+            </div>
+            <div class="heading-meta">
+              <span class="legend-item"><i class="dot blue"></i>识别区域</span>
+              <span class="legend-item"><i class="dot red"></i>选中</span>
+              <button id="resetZoom" class="zoom-reset" type="button" hidden>还原画面</button>
+              <span id="screenSize" class="screen-size">—</span>
+            </div>
           </div>
           <div id="screenStage" class="screen-stage">
             <div id="emptyState" class="empty-state">
               <span class="scan-mark" aria-hidden="true"></span>
-              <strong>等待解析</strong>
-              <p>启动鸿蒙模拟器后，点击右上角“解析”。</p>
+              <strong>等待开始</strong>
+              <p>点击“开始解析”查看画面与语义节点</p>
             </div>
             <div id="imageWrap" class="image-wrap" hidden>
-              <img id="screenImage" alt="鸿蒙模拟器当前屏幕" />
+              <img id="screenImage" alt="屏幕解析画面，点击可局部放大" role="button" tabindex="0" />
               <div id="overlay" class="overlay"></div>
             </div>
           </div>
@@ -52,8 +56,11 @@
 
         <aside class="result-card">
           <div class="section-heading">
-            <h2>语义节点</h2>
-            <span id="nodeCount">0 个</span>
+            <div class="heading-title">
+              <span class="section-kicker">02 / STRUCTURE</span>
+              <h2>语义节点</h2>
+            </div>
+            <span id="nodeCount" class="node-count">0</span>
           </div>
           <div id="pageSummary" class="page-summary" hidden>
             <strong id="pageTitle"></strong>
@@ -63,6 +70,70 @@
           <ol id="nodeList" class="node-list"></ol>
           <div id="nodeDetail" class="node-detail" hidden></div>
         </aside>
+      </section>
+
+      <section id="architectureView" class="architecture-view" aria-label="系统架构" hidden>
+        <div class="architecture-inner">
+          <div class="architecture-hero">
+            <div>
+              <span class="section-kicker">SYSTEM FRAMEWORK / TARGET ARCHITECTURE</span>
+              <h2>从屏幕画面到系统语义服务</h2>
+              <p>目标是在系统框架层按需解析当前可见屏幕，输出统一的 ScreenGraph，让上层能力跨应用读取屏幕语义。</p>
+            </div>
+            <div class="architecture-state">
+              <span class="state-label">当前实现边界</span>
+              <strong>PC 单帧原型</strong>
+              <span>系统服务与动态更新仍在规划中</span>
+            </div>
+          </div>
+
+          <div class="architecture-legend" aria-label="能力状态图例">
+            <span><i class="state-dot current"></i>PC 原型已实现</span>
+            <span><i class="state-dot progress"></i>部分验证</span>
+            <span><i class="state-dot planned"></i>目标能力</span>
+          </div>
+
+          <div class="architecture-stack">
+            <article class="architecture-layer layer-consumer">
+              <div class="layer-label"><span class="layer-number">04</span><span>上层调用</span></div>
+              <div class="layer-body">
+                <div class="layer-heading"><h3>统一语义，供系统能力使用</h3><span class="capability-tag planned">目标能力</span></div>
+                <div class="capability-list"><span>系统助手</span><span>无障碍服务</span><span>跨应用 Agent</span><span>自动化测试</span></div>
+              </div>
+            </article>
+            <div class="layer-connector" aria-hidden="true">↑</div>
+            <article class="architecture-layer layer-service">
+              <div class="layer-label"><span class="layer-number">03</span><span>框架服务</span></div>
+              <div class="layer-body">
+                <div class="layer-heading"><h3>ScreenGraph 服务接口</h3><span class="capability-tag progress">部分验证</span></div>
+                <p>单帧快照与节点 schema 已在 PC 原型输出；跨帧稳定 ID、变化事件、权限裁剪和查询接口尚未实现。</p>
+                <div class="service-signals"><span>schema v4.0</span><span id="archSnapshotStat">尚未生成快照</span></div>
+              </div>
+            </article>
+            <div class="layer-connector" aria-hidden="true">↑</div>
+            <article class="architecture-layer layer-parser">
+              <div class="layer-label"><span class="layer-number">02</span><span>解析引擎</span></div>
+              <div class="layer-body">
+                <div class="layer-heading"><h3>视觉感知与证据融合</h3><span class="capability-tag current">PC 原型</span></div>
+                <p>PC 侧通过 HDC 获取设备截图，经默认启用的 OpenCV 图形候选、PaddleOCR 和 VLM 解析为单帧语义快照。分区补查与跨帧跟踪仍是后续工作。</p>
+                <div class="capability-list"><span>候选发现</span><span>OCR / VLM</span><span>节点与包含关系</span></div>
+              </div>
+            </article>
+            <div class="layer-connector" aria-hidden="true">↑</div>
+            <article class="architecture-layer layer-system">
+              <div class="layer-label"><span class="layer-number">01</span><span>系统输入</span></div>
+              <div class="layer-body">
+                <div class="layer-heading"><h3>窗口、显示与无障碍基础设施</h3><span class="capability-tag planned">目标接入</span></div>
+                <p>目标是从系统侧获取可授权的屏幕、窗口和可用的无障碍信息。当前设备路径通过 HDC 从 PC 侧采图；团队已完成 SA 的 QEMU 注册发布验证，开发板端侧链路仍待验证。</p>
+              </div>
+            </article>
+          </div>
+
+          <div class="architecture-footer">
+            <div><strong>当前解析流程</strong><p>HDC 实时截图 → 单帧 ScreenGraph 快照 → 节点定位与局部放大</p></div>
+            <button id="backToDemoButton" type="button">查看实时解析 <span aria-hidden="true">↗</span></button>
+          </div>
+        </div>
       </section>
     </main>
     <script src="/app.js" defer></script>
