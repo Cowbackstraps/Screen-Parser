@@ -1,0 +1,182 @@
+# Copyright (c) 2026 OpenHarmony Contributors
+# Licensed under the Apache License, Version 2.0 (the "License");
+
+import("//build/ohos.gni")
+import("//foundation/screenparser/screenparser.gni")
+
+config("screenparser_public_config") {
+  include_dirs = [
+    "analyzer/include",
+    "capture/include",
+    "common/include",
+    "inference/include",
+    "ocr/include",
+    "preprocess/include",
+    "sa/include",
+    "schema/include",
+    "//foundation/screenparser/interfaces/innerkits/screen_parser/include",
+  ]
+}
+
+# Pure-logic core: no OHOS service dependency, unit-testable off-device.
+ohos_static_library("screenparser_core") {
+  sources = [
+    "analyzer/src/screen_analyzer.cpp",
+    "capture/src/screen_capture.cpp",
+    "common/src/base64.cpp",
+    "common/src/json.cpp",
+    "common/src/screen_error.cpp",
+    "common/src/service_config.cpp",
+    "inference/src/http_message.cpp",
+    "inference/src/json_constraint_decoder.cpp",
+    "inference/src/ms_lite_engine.cpp",
+    "inference/src/qwen_tokenizer.cpp",
+    "inference/src/remote_vlm_engine.cpp",
+    "ocr/src/core_vision_ocr_engine.cpp",
+    "preprocess/src/image_preprocess.cpp",
+    "schema/src/screen_schema.cpp",
+  ]
+
+  public_configs = [ ":screenparser_public_config" ]
+
+  # OHOS 默认挂 //build/config/compiler:no_exceptions（-fno-exceptions），且默认 config 的
+  # flag 排在 target 自身 cflags_cc 之后，故直接写 cflags_cc=["-fexceptions"] 会被覆盖、无效。
+  # 正确姿势是用 cxx 模板内置开关 use_exceptions=true：模板会自动执行
+  # configs += exceptions 且 configs -= no_exceptions（见 build/templates/cxx/cxx.gni）。
+  # 本组件用 C++ 异常做错误处理：core 深层 throw、SA 边界 catch 转错误响应，不外泄到框架。
+  # 全程无 dynamic_cast/typeid，故不需 use_rtti。
+  use_exceptions = true
+
+  defines = []
+  if (screenparser_enable_capture) {
+    defines += [ "SCREENPARSER_ENABLE_CAPTURE" ]
+  }
+  if (screenparser_enable_mslite) {
+    defines += [ "SCREENPARSER_ENABLE_MSLITE" ]
+  }
+  if (screenparser_enable_ocr) {
+    defines += [ "SCREENPARSER_ENABLE_OCR" ]
+  }
+  if (screenparser_enable_remote_vlm) {
+    defines += [ "SCREENPARSER_ENABLE_REMOTE_VLM" ]
+  }
+
+  external_deps = [ "c_utils:utils" ]
+  if (screenparser_enable_capture) {
+    external_deps += [
+      "display_manager:displaymgr",           # ✅ 正确 inner kit 名是 displaymgr（非 display_manager）；全树 329 处引用为证
+      "multimedia_image:image",               # ✅ PixelMap/ImagePacker（image_packer.h、pixelmap.h）
+      # ⚠ screenshot.h（OHOS::Screenshot::CaptureScreen）属 graphic_2d，但其 inner_kits 未单列 screenshot 目标；
+      #   重新启用 capture 前须确认提供该头的 inner kit（候选：graphic_2d:librender_service_client）。
+      # 已移除 window:libwm —— screen_capture.cpp 全程未使用任何 window API。
+    ]
+  }
+  if (screenparser_enable_mslite) {
+    external_deps += [ "mindspore_lite:mindspore-lite" ]
+  }
+  if (screenparser_enable_ocr) {
+    external_deps += [ "core_vision:text_recognition" ]
+  }
+
+  subsystem_name = "screenparser"
+  part_name = "screenparser"
+}
+
+# Service shared library: SA + IPC stub + optional HTTP debug server.
+ohos_shared_library("screenparser_service") {
+  sources = [
+    "sa/src/http_debug_server.cpp",
+    "sa/src/screen_parser_sa.cpp",
+  ]
+
+  public_configs = [ ":screenparser_public_config" ]
+
+  # SA 边界 catch core 抛出的异常（见 screenparser_core 注释），用官方开关开启异常。
+  use_exceptions = true
+
+  defines = []
+  if (screenparser_enable_http_debug) {
+    defines += [ "SCREENPARSER_ENABLE_HTTP_DEBUG" ]
+  }
+
+  deps = [
+    ":screenparser_core",
+    "//foundation/screenparser/interfaces/innerkits/screen_parser:screenparser_innerkits",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",   # SystemAbility 基类 + system_ability.h（不在 samgr，属 safwk 组件）
+    "samgr:samgr_proxy",
+  ]
+
+  # NOTE: deliberately NO relative_install_dir here. This .so is linked directly
+  # (DT_NEEDED) by the standalone /system/bin/screenparser executable, so it must
+  # land in the standard /system/lib64/ search path. A relative_install_dir would
+  # put it in a /system/lib64/<dir>/ subdir that the runtime linker does NOT search
+  # for the exe, causing "Error loading shared library ... No such file" at boot.
+  subsystem_name = "screenparser"
+  part_name = "screenparser"
+}
+
+# SA host process. Target renamed to avoid clashing with group("screenparser")
+# below; output_name keeps the installed binary at /system/bin/screenparser
+# (the exact path init cfg bootstraps).
+ohos_executable("screenparser_bin") {
+  output_name = "screenparser"
+  sources = [ "sa/src/main.cpp" ]
+
+  # 与 core/service 保持一致，开启异常支持。
+  use_exceptions = true
+
+  deps = [ ":screenparser_service" ]
+
+  external_deps = [
+    "c_utils:utils",              # main.cpp 的 sptr<ScreenParserSA> 触发 RefBase::IncStrongRef/DecStrongRef（实现在 libc_utils.z.so）；shared_library 的 external_deps 不会传递到 exe，必须显式声明
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",   # main.cpp 经 screen_parser_sa.h 间接依赖 SystemAbility
+    "samgr:samgr_proxy",
+  ]
+
+  install_images = [ "system" ]
+  subsystem_name = "screenparser"
+  part_name = "screenparser"
+}
+
+# SA profile (SAID registration).
+ohos_prebuilt_etc("screenparser_sa_profile") {
+  source = "../../sa_profile/screenparser.xml"
+  relative_install_dir = "systemability"
+  subsystem_name = "screenparser"
+  part_name = "screenparser"
+}
+
+# init .cfg (native process bootstrap).
+ohos_prebuilt_etc("screenparser_init_cfg") {
+  source = "../../etc/init/screenparser.cfg"
+  relative_install_dir = "init"
+  subsystem_name = "screenparser"
+  part_name = "screenparser"
+}
+
+# Default service config (backend selection, model paths, HTTP debug server).
+# Installed to /system/etc/screenparser/service_config.json; the SA falls back
+# to built-in defaults when this file is absent.
+ohos_prebuilt_etc("screenparser_service_config") {
+  source = "../../etc/screenparser/service_config.json"
+  relative_install_dir = "screenparser"
+  subsystem_name = "screenparser"
+  part_name = "screenparser"
+}
+
+group("screenparser") {
+  deps = [
+    ":screenparser_bin",
+    ":screenparser_init_cfg",
+    ":screenparser_sa_profile",
+    ":screenparser_service",
+    ":screenparser_service_config",
+  ]
+}

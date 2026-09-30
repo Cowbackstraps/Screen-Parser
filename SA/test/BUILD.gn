@@ -1,0 +1,52 @@
+# Copyright (c) 2026 OpenHarmony Contributors
+# Licensed under the Apache License, Version 2.0 (the "License");
+
+# In-tree unit tests. Built against the real GoogleTest and linked with the
+# pure-logic core library. For host-side verification without the OHOS SDK use
+# test/CMakeLists.txt (which swaps in the minimal gtest shim under third_party/).
+
+import("//build/ohos.gni")
+import("//foundation/screenparser/screenparser.gni")
+
+config("screenparser_test_config") {
+  include_dirs = [
+    "//foundation/screenparser/services/screen_parser/analyzer/include",
+    "//foundation/screenparser/services/screen_parser/capture/include",
+    "//foundation/screenparser/services/screen_parser/common/include",
+    "//foundation/screenparser/services/screen_parser/inference/include",
+    "//foundation/screenparser/services/screen_parser/ocr/include",
+    "//foundation/screenparser/services/screen_parser/preprocess/include",
+    "//foundation/screenparser/services/screen_parser/schema/include",
+  ]
+}
+
+ohos_unittest("screenparser_unittest") {
+  sources = [
+    "main.cpp",
+    "test_analyzer.cpp",
+    "test_json_constraint.cpp",
+    "test_json_preprocess.cpp",
+    "test_ocr.cpp",
+    "test_remote_vlm.cpp",
+    "test_schema.cpp",
+    "test_service_config.cpp",
+    "test_tokenizer.cpp",
+  ]
+
+  configs = [ ":screenparser_test_config" ]
+
+  deps = [ "//foundation/screenparser/services/screen_parser:screenparser_core" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+  ]
+
+  subsystem_name = "screenparser"
+  part_name = "screenparser"
+}
+
+group("screenparser_test") {
+  testonly = true
+  deps = [ ":screenparser_unittest" ]
+}

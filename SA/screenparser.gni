@@ -1,0 +1,29 @@
+# Copyright (c) 2026 OpenHarmony Contributors
+# Licensed under the Apache License, Version 2.0 (the "License");
+
+# Feature switches for the screenparser subsystem. These map to the component
+# "features" declared in bundle.json and control which optional backends are
+# compiled in.
+
+declare_args() {
+  # Enable the system screenshot backend (foundation/window). Turn off for host
+  # unit-test builds where window/display headers are unavailable.
+  screenparser_enable_capture = true
+
+  # Enable the MindSpore Lite on-device inference backend.
+  screenparser_enable_mslite = true
+
+  # Enable the local HTTP debug server that reuses the web front-end.
+  screenparser_enable_http_debug = true
+
+  # Enable the on-device OCR backend (core_vision TextRecognition). Turn off for
+  # host unit-test builds where core_vision headers are unavailable; the engine
+  # falls back to a stub and text recognition is reported as unavailable.
+  screenparser_enable_ocr = true
+
+  # Enable the remote VLM backend (OpenAI-compatible /chat/completions over a
+  # self-contained BSD-socket HTTP client). Turn off for host unit-test builds;
+  # the transport falls back to a stub while the pure request/response build and
+  # parse logic still compiles and is exercised by the unit tests.
+  screenparser_enable_remote_vlm = true
+}

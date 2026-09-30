@@ -1,0 +1,59 @@
+{
+  "name": "@ohos/screenparser",
+  "description": "On-device HarmonyOS screen semantic parsing system ability (HDC-free capture + MindSpore Lite VLM inference).",
+  "version": "1.0.0",
+  "license": "Apache License 2.0",
+  "publishAs": "code-segment",
+  "segment": {
+    "destPath": "foundation/screenparser"
+  },
+  "dirs": {},
+  "scripts": {},
+  "component": {
+    "name": "screenparser",
+    "subsystem": "screenparser",
+    "syscap": [],
+    "features": [
+      "screenparser_enable_capture",
+      "screenparser_enable_http_debug",
+      "screenparser_enable_mslite",
+      "screenparser_enable_ocr",
+      "screenparser_enable_remote_vlm"
+    ],
+    "adapted_system_type": [
+      "standard"
+    ],
+    "rom": "2048KB",
+    "ram": "~1024MB",
+    "deps": {
+      "components": [
+        "samgr",
+        "safwk",
+        "ipc",
+        "c_utils",
+        "hilog",
+        "window",
+        "multimedia_image",
+        "display_manager"
+      ],
+      "third_party": []
+    },
+    "build": {
+      "sub_component": [
+        "//foundation/screenparser/services/screen_parser:screenparser"
+      ],
+      "inner_kits": [
+        {
+          "name": "//foundation/screenparser/interfaces/innerkits/screen_parser:screenparser_innerkits",
+          "header": {
+            "header_files": [
+              "i_screen_parser.h",
+              "screen_parser_callback.h"
+            ],
+            "header_base": "//foundation/screenparser/interfaces/innerkits/screen_parser/include"
+          }
+        }
+      ]
+    }
+  }
+}

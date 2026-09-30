@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (c) 2026 OpenHarmony Contributors
+  Licensed under the Apache License, Version 2.0 (the "License");
+
+  System Ability registration for the screen parser service.
+  SAID 65537 lies in the OpenHarmony vendor range [65536, 131072]
+  (VENDOR_SYS_ABILITY_ID_BEGIN..END) reserved for downstream components, so it
+  never collides with an official subsystem SAID. It MUST equal kScreenParserSaId
+  in interfaces/innerkits/screen_parser/include/i_screen_parser.h.
+-->
+<info>
+    <process>screenparser</process>
+    <systemability>
+        <name>65537</name>
+        <libpath>libscreenparser_service.z.so</libpath>
+        <run-on-create>true</run-on-create>
+        <distributed-enable>false</distributed-enable>
+        <dump-enable>false</dump-enable>
+        <device-types>
+            <device-type>default</device-type>
+            <device-type>tablet</device-type>
+        </device-types>
+    </systemability>
+</info>

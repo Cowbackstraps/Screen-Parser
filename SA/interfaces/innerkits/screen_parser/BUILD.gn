@@ -1,0 +1,31 @@
+# Copyright (c) 2026 OpenHarmony Contributors
+# Licensed under the Apache License, Version 2.0 (the "License");
+
+import("//build/ohos.gni")
+
+config("screenparser_innerkits_config") {
+  include_dirs = [ "include" ]
+}
+
+ohos_shared_library("screenparser_innerkits") {
+  sources = [
+    "src/screen_parser_callback.cpp",
+    "src/screen_parser_proxy.cpp",
+    "src/screen_parser_stub.cpp",
+  ]
+
+  include_dirs = [ "include" ]
+
+  public_configs = [ ":screenparser_innerkits_config" ]
+
+  # 与 core/service 保持一致开启异常支持（stub 分发 SA 调用，异常在 service 内 catch）。
+  use_exceptions = true
+
+  external_deps = [
+    "c_utils:utils",
+    "ipc:ipc_core",
+  ]
+
+  subsystem_name = "screenparser"
+  part_name = "screenparser"
+}

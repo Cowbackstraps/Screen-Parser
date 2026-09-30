@@ -1,0 +1,23 @@
+# Copyright (c) 2026 OpenHarmony Contributors
+# Licensed under the Apache License, Version 2.0 (the "License");
+#
+# SELinux file labels for the screenparser system ability.
+#
+# Install alongside screenparser.te, e.g.:
+#   base/security/selinux_adapter/sepolicy/ohos_policy/screenparser/file_contexts
+# Some OpenHarmony versions use a single central file_contexts instead of a
+# per-component one — in that case merge these lines into it.
+#
+# After editing, rebuild so the labels are baked into the image, or relabel on
+# an already-flashed device with:  hdc shell restorecon -R /system/bin/screenparser
+
+# SA host executable — drives the init -> screenparser domain transition.
+/system/bin/screenparser                        u:object_r:screenparser_exec:s0
+
+# Config / model / web assets; SA profile; init cfg — default system_file label.
+/system/etc/screenparser(/.*)?                  u:object_r:system_file:s0
+/system/etc/systemability/screenparser\.xml     u:object_r:system_file:s0
+/system/etc/init/screenparser\.cfg              u:object_r:system_file:s0
+
+# The service shared library at /system/lib64/screenparser/ inherits the default
+# /system/lib64 label of your OH version; no explicit rule is required here.

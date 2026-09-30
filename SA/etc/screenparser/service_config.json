@@ -1,0 +1,26 @@
+{
+  "backend": "remote",
+  "model_root": "/system/etc/screenparser",
+  "vision_model_path": "",
+  "language_model_path": "",
+  "vocab_path": "",
+  "merges_path": "",
+  "image_input_size": 448,
+  "thread_num": 4,
+  "max_tokens": 4000,
+  "temperature": 0.0,
+  "base_url": "http://127.0.0.1:8000/v1",
+  "model": "qwen3.5-2b",
+  "api_key": "EMPTY",
+  "timeout_ms": 30000,
+  "pending_threshold": 0.68,
+  "max_nodes": 300,
+  "enable_ocr": true,
+  "enable_node_tree": true,
+  "http": {
+    "enable": true,
+    "host": "127.0.0.1",
+    "port": 8765,
+    "static_dir": ""
+  }
+}

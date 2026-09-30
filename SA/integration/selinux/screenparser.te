@@ -1,0 +1,71 @@
+# Copyright (c) 2026 OpenHarmony Contributors
+# Licensed under the Apache License, Version 2.0 (the "License");
+#
+# SELinux policy for the screenparser system ability (SAID 65537).
+#
+# Install location (varies slightly by OpenHarmony version):
+#   base/security/selinux_adapter/sepolicy/ohos_policy/screenparser/screenparser.te
+#
+# Bring-up strategy (SELinux is enforcing on RK3568/Dayu200):
+#   1. Keep `permissive screenparser;` for the first boot so the service runs
+#      while you collect avc denials.
+#   2. Exercise the flows: GetStatus / AnalyzeSync / RecognizeText, plus the
+#      remote-VLM HTTP call and (optionally) the local HTTP debug server.
+#   3. Collect denials:  hdc shell dmesg | grep "avc: *denied"
+#   4. Convert them with audit2allow and append the resulting `allow` rules here.
+#   5. Delete the `permissive screenparser;` line to run enforcing.
+#
+# NOTE: the macros below (init_daemon_transition / net_domain / binder_*) are
+# provided by OH te_macros. If your version names them differently, expand them
+# manually using the commented equivalents.
+
+# ---- Type declarations ----------------------------------------------------
+# The SA host executable: /system/bin/screenparser
+type screenparser_exec, exec_type, file_type;
+# The service domain. mlstrustedsubject eases cross-sensitivity reads for a
+# system service; drop it if your MLS setup does not require it.
+type screenparser, domain, mlstrustedsubject;
+
+# ---- init -> screenparser domain transition ------------------------------
+# init execs screenparser_exec and transitions into the screenparser domain.
+init_daemon_transition(screenparser)
+# Manual equivalent (if init_daemon_transition is unavailable):
+#   type_transition init screenparser_exec:process screenparser;
+#   allow init screenparser:process transition;
+#   allow init screenparser_exec:file { read open getattr execute };
+
+# ---- Bring-up: PERMISSIVE (remove once the allow rules below are complete) --
+permissive screenparser;
+
+# ---- Execute / map own binary --------------------------------------------
+allow screenparser screenparser_exec:file { getattr open read execute execute_no_trans map };
+
+# ---- binder / samgr IPC (SA registration + inbound client calls) ---------
+binder_use(screenparser)
+binder_call(screenparser, samgr)
+binder_service(screenparser)
+
+# ---- Read config / model / web assets / SA profile / init cfg ------------
+# These live under /system/etc/... and carry the default system_file label:
+#   /system/etc/screenparser/service_config.json, .../static/*
+#   /system/etc/systemability/screenparser.xml
+#   /system/etc/init/screenparser.cfg
+allow screenparser system_file:dir { search open read getattr };
+allow screenparser system_file:file { getattr open read map };
+
+# ---- dlopen the SA service shared library -------------------------------
+# /system/lib64/screenparser/libscreenparser_service.z.so
+# The lib inherits your OH's default /system/lib64 label (often system_lib_file).
+# audit2allow will emit the exact rule; a typical result is:
+#   allow screenparser system_lib_file:file { read open getattr map };
+
+# ---- Remote VLM backend: outbound TCP (http:// only) ---------------------
+net_domain(screenparser)
+allow screenparser self:tcp_socket { create connect read write getattr getopt setopt };
+
+# ---- Optional local HTTP debug server: inbound TCP listen ----------------
+# Active only when screenparser_enable_http_debug is on and http.enable=true.
+allow screenparser self:tcp_socket { bind listen accept };
+
+# ---- hilog logging -------------------------------------------------------
+allow screenparser hilogd:unix_dgram_socket sendto;

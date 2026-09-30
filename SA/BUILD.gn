@@ -1,0 +1,11 @@
+# Copyright (c) 2026 OpenHarmony Contributors
+# Licensed under the Apache License, Version 2.0 (the "License");
+
+import("//build/ohos.gni")
+
+group("screenparser") {
+  deps = [
+    "//foundation/screenparser/interfaces/innerkits/screen_parser:screenparser_innerkits",
+    "//foundation/screenparser/services/screen_parser:screenparser",
+  ]
+}

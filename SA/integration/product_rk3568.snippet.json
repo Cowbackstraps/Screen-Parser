@@ -1,0 +1,9 @@
+{
+  "subsystem": "screenparser",
+  "components": [
+    {
+      "component": "screenparser",
+      "features": {}
+    }
+  ]
+}
